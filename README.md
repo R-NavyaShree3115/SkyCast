@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 This is project named "SKYCAST" -  a Weather App
 
 Required:
@@ -103,3 +104,6 @@ weather-application/
 │
 ├── README.md
 └── .gitignore
+=======
+# SkyCast
+>>>>>>> 44dde73595c640a8c6a852845ce6aeb0639701dd
