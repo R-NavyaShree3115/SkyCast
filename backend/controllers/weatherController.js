@@ -2,10 +2,13 @@ import WeatherSearch from "../models/WeatherSearch.js";
 import { getLocation } from "../services/geocodingService.js";
 import { getWeather, getHistoricalWeather} from "../services/weatherService.js";
 
+
+
 const searchWeather = async (req, res, next) => {
     try {
-        const { location, latitude, longitude } = req.query;
+        console.log("SEARCH API CALLED");
 
+        const { location, latitude, longitude } = req.query;
         let place;
 
         if (latitude !== undefined && longitude !== undefined) {
@@ -29,23 +32,44 @@ const searchWeather = async (req, res, next) => {
                 latitude: lat,
                 longitude: lon
             };
+
         } else if (location && location.trim()) {
-            place = await getLocation(location);
+
+            const results = await getLocation(location);
+
+            console.log("Geocoding results:", results);
+
+            if (!results || results.length === 0) {
+                return res.status(404).json({
+                    message: "Location not found"
+                });
+            }
+
+            place = results[0];
+
         } else {
             return res.status(400).json({
                 message: "Enter a location or provide GPS coordinates"
             });
         }
-     const weather = await getWeather(
+
+        const weather = await getWeather(
             place.latitude,
             place.longitude
         );
-        res.json({ location: place, weather });
+
+        console.log("Weather fetched successfully");
+
+        return res.status(200).json({
+            location: place,
+            weather
+        });
+
     } catch (error) {
+        console.error("SEARCH WEATHER ERROR:", error);
         next(error);
     }
 };
-
 
  const historicalWeather = async (req, res, next) => {
     try {
@@ -109,12 +133,15 @@ const saveSearch = async (req, res, next) => {
             });
         }
 
-        const place = await getLocation(location);
+        const results = await getLocation(location);
 
-        const weather = await getWeather(
-            place.latitude,
-            place.longitude
-        );
+if (!results || results.length === 0) {
+    return res.status(404).json({
+        message: "Location not found"
+    });
+}
+
+const place = results[0];
 
         const saved = await WeatherSearch.create({
             label: label || "",
@@ -122,7 +149,7 @@ const saveSearch = async (req, res, next) => {
             country: place.country,
             latitude: place.latitude,
             longitude: place.longitude,
-            weather
+            weather: await getWeather(place.latitude, place.longitude)
         });
 
         res.status(201).json(saved);
